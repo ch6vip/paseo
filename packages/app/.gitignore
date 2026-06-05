@@ -12,6 +12,7 @@ expo-env.d.ts
 # Native
 .kotlin/
 *.orig.*
+credentials.json
 *.jks
 *.p8
 *.p12

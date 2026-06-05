@@ -44,6 +44,7 @@ const { theme, snapshotState, configState, patchConfigMock, openProviderSettings
 );
 
 vi.mock("react-native", () => ({
+  Platform: { OS: "web" },
   View: ({ children, testID }: { children?: React.ReactNode; testID?: string }) =>
     React.createElement("div", { "data-testid": testID }, children),
   Text: ({ children }: { children?: React.ReactNode }) =>
@@ -171,6 +172,31 @@ vi.mock("@/hooks/use-daemon-config", () => ({
 vi.mock("@/runtime/host-runtime", () => ({
   useHostRuntimeIsConnected: () => true,
 }));
+
+vi.mock("@/i18n", () => {
+  const translations: Record<string, string> = {
+    "provider.add": "Add provider",
+    "settings.host.providers": "Providers",
+    "settings.providers.available": "Available",
+    "settings.providers.connectToSee": "Connect to this host to see providers",
+    "settings.providers.disabled": "Disabled",
+    "settings.providers.error": "Error",
+    "settings.providers.loading": "Loading",
+    "settings.providers.loadingState": "Loading...",
+    "settings.providers.modelCount.one": "1 model",
+    "settings.providers.modelCount.other": "{{count}} models",
+    "settings.providers.notInstalled": "Not installed",
+    "settings.providers.unableToUpdate": "Unable to update provider",
+  };
+  return {
+    useI18n: () => ({
+      language: "en",
+      resolvedLanguage: "en",
+      t: (key: string, values?: Record<string, string | number | null | undefined>) =>
+        (translations[key] ?? key).replace(/\{\{\s*count\s*\}\}/g, String(values?.count ?? "")),
+    }),
+  };
+});
 
 import { ProvidersSection } from "./providers-section";
 

@@ -81,6 +81,51 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Create temporary Android signing credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          keystore_path="$RUNNER_TEMP/android-release.jks"
+          keystore_password="$(openssl rand -base64 32)"
+          key_password="$(openssl rand -base64 32)"
+          key_alias="paseo-release"
+
+          keytool -genkeypair \
+            -v \
+            -storetype JKS \
+            -keystore "$keystore_path" \
+            -storepass "$keystore_password" \
+            -alias "$key_alias" \
+            -keypass "$key_password" \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Paseo Android Release,O=Paseo,L=San Francisco,S=California,C=US"
+
+          KEYSTORE_PATH="$keystore_path" \
+            KEYSTORE_PASSWORD="$keystore_password" \
+            KEY_ALIAS="$key_alias" \
+            KEY_PASSWORD="$key_password" \
+            node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+
+          const credentialsPath = path.join(process.cwd(), "packages/app/credentials.json");
+          const credentials = {
+            android: {
+              keystore: {
+                keystorePath: process.env.KEYSTORE_PATH,
+                keystorePassword: process.env.KEYSTORE_PASSWORD,
+                keyAlias: process.env.KEY_ALIAS,
+                keyPassword: process.env.KEY_PASSWORD,
+              },
+            },
+          };
+
+          fs.writeFileSync(credentialsPath, `${JSON.stringify(credentials, null, 2)}\n`);
+          NODE
+
       - name: Build Android APK on EAS
         id: eas_build
         shell: bash

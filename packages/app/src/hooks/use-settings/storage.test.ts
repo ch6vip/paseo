@@ -64,6 +64,30 @@ describe("loadAppSettingsFromStorage", () => {
     expect(result.terminalScrollbackLines).toBe(42_000);
   });
 
+  it("loads a supported language from app settings", async () => {
+    const deps = makeDeps({
+      storage: createInMemoryKeyValueStorage({
+        [APP_SETTINGS_KEY]: JSON.stringify({ language: "en" }),
+      }),
+    });
+
+    const result = await loadAppSettingsFromStorage(deps);
+
+    expect(result.language).toBe("en");
+  });
+
+  it("drops an unsupported language back to the default", async () => {
+    const deps = makeDeps({
+      storage: createInMemoryKeyValueStorage({
+        [APP_SETTINGS_KEY]: JSON.stringify({ language: "fr" }),
+      }),
+    });
+
+    const result = await loadAppSettingsFromStorage(deps);
+
+    expect(result.language).toBe(DEFAULT_CLIENT_SETTINGS.language);
+  });
+
   it("normalizes terminal scrollback lines from storage", async () => {
     const deps = makeDeps({
       storage: createInMemoryKeyValueStorage({

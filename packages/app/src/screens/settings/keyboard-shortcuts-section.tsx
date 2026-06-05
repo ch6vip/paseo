@@ -7,6 +7,7 @@ import { SettingsSection } from "@/screens/settings/settings-section";
 import { Button } from "@/components/ui/button";
 import { Shortcut } from "@/components/ui/shortcut";
 import { useKeyboardShortcutOverrides } from "@/hooks/use-keyboard-shortcut-overrides";
+import { useI18n } from "@/i18n";
 import {
   buildKeyboardShortcutHelpSections,
   getBindingIdForAction,
@@ -32,6 +33,7 @@ function ShortcutSequence({
   chord: string[] | null;
   heldModifiers: string | null;
 }) {
+  const { t } = useI18n();
   const displayChord = useMemo(() => {
     const combos = [...(chord ?? [])];
     if (heldModifiers) {
@@ -41,7 +43,7 @@ function ShortcutSequence({
   }, [chord, heldModifiers]);
 
   if ((!chord || chord.length === 0) && !heldModifiers) {
-    return <Text style={styles.capturingText}>Press shortcut...</Text>;
+    return <Text style={styles.capturingText}>{t("settings.shortcuts.pressShortcut")}</Text>;
   }
 
   return <Shortcut chord={displayChord} />;
@@ -119,6 +121,7 @@ function ShortcutRow({
   onCancel: () => void;
   onReset: () => void;
 }) {
+  const { t } = useI18n();
   const displayChord = useMemo(
     () => (overrideCombo ? chordStringToShortcutKeys(overrideCombo) : [row.keys]),
     [overrideCombo, row.keys],
@@ -138,17 +141,17 @@ function ShortcutRow({
           <>
             {isCapturing && capturedCombos.length > 0 ? (
               <Button variant="ghost" size="sm" onPress={onDone}>
-                Done
+                {t("common.done")}
               </Button>
             ) : null}
             <Button variant="ghost" size="sm" onPress={isCapturing ? onCancel : onRebind}>
-              {isCapturing ? "Cancel" : "Rebind"}
+              {isCapturing ? t("common.cancel") : t("settings.shortcuts.rebind")}
             </Button>
           </>
         )}
         {overrideCombo !== undefined && !isCapturing && (
           <Button variant="ghost" size="sm" onPress={onReset}>
-            <Text style={styles.resetText}>Reset</Text>
+            <Text style={styles.resetText}>{t("settings.shortcuts.reset")}</Text>
           </Button>
         )}
       </View>
@@ -157,6 +160,7 @@ function ShortcutRow({
 }
 
 export function KeyboardShortcutsSection() {
+  const { t } = useI18n();
   const [capturingBindingId, setCapturingBindingId] = useState<string | null>(null);
   const [capturedCombos, setCapturedCombos] = useState<string[]>([]);
   const [heldModifiers, setHeldModifiers] = useState<string | null>(null);
@@ -244,9 +248,9 @@ export function KeyboardShortcutsSection() {
 
   if (isNative) {
     return (
-      <SettingsSection title="Shortcuts">
+      <SettingsSection title={t("settings.shortcuts")}>
         <View style={mobileCardStyle}>
-          <Text style={styles.mobileText}>Keyboard shortcuts are only available on desktop</Text>
+          <Text style={styles.mobileText}>{t("settings.shortcuts.mobileOnly")}</Text>
         </View>
       </SettingsSection>
     );
@@ -254,7 +258,7 @@ export function KeyboardShortcutsSection() {
 
   const resetAllButton = hasOverrides ? (
     <Button variant="ghost" size="sm" onPress={handleResetAll}>
-      Reset all
+      {t("settings.shortcuts.resetAll")}
     </Button>
   ) : undefined;
 

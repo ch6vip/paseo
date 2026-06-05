@@ -11,6 +11,7 @@ import { getProviderIcon } from "@/components/provider-icons";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Switch } from "@/components/ui/switch";
 import { SettingsSection } from "@/screens/settings/settings-section";
+import { useI18n, type TranslationKey } from "@/i18n";
 import { useProviderSettingsStore } from "@/stores/provider-settings-store";
 import { ChevronRight, Plus } from "lucide-react-native";
 
@@ -18,6 +19,10 @@ type ProviderDefinition = ReturnType<typeof buildProviderDefinitions>[number];
 type ProviderEntry = NonNullable<ReturnType<typeof useProvidersSnapshot>["entries"]>[number];
 
 type StatusTone = "success" | "warning" | "danger" | "muted" | "loading";
+type Translate = (
+  key: TranslationKey,
+  values?: Record<string, string | number | null | undefined>,
+) => string;
 
 interface ProviderStatus {
   tone: StatusTone;
@@ -25,18 +30,25 @@ interface ProviderStatus {
   modelCount: number | null;
 }
 
-function getProviderStatus(status: string, enabled: boolean, modelCount: number): ProviderStatus {
-  if (!enabled) return { tone: "muted", label: "Disabled", modelCount: null };
-  if (status === "loading") return { tone: "loading", label: "Loading", modelCount: null };
-  if (status === "error") return { tone: "danger", label: "Error", modelCount: null };
+function getProviderStatus(
+  status: string,
+  enabled: boolean,
+  modelCount: number,
+  t: Translate,
+): ProviderStatus {
+  if (!enabled) return { tone: "muted", label: t("settings.providers.disabled"), modelCount: null };
+  if (status === "loading")
+    return { tone: "loading", label: t("settings.providers.loading"), modelCount: null };
+  if (status === "error")
+    return { tone: "danger", label: t("settings.providers.error"), modelCount: null };
   if (status === "ready") {
     return {
       tone: "success",
-      label: "Available",
+      label: t("settings.providers.available"),
       modelCount: modelCount > 0 ? modelCount : null,
     };
   }
-  return { tone: "warning", label: "Not installed", modelCount: null };
+  return { tone: "warning", label: t("settings.providers.notInstalled"), modelCount: null };
 }
 
 interface ProviderRowProps {
@@ -59,6 +71,7 @@ function ProviderRow({
   onToggleEnabled,
 }: ProviderRowProps) {
   const { theme } = useUnistyles();
+  const { t } = useI18n();
   const ProviderIcon = getProviderIcon(def.id);
   const providerError =
     enabled &&
@@ -68,7 +81,7 @@ function ProviderRow({
       ? entry.error.trim()
       : null;
   const modelCount = entry.models?.length ?? 0;
-  const providerStatus = getProviderStatus(entry.status, enabled, modelCount);
+  const providerStatus = getProviderStatus(entry.status, enabled, modelCount, t);
 
   const handlePress = useCallback(() => {
     onPress(def.id);
@@ -147,6 +160,7 @@ function getDotColor(tone: StatusTone, theme: ReturnType<typeof useUnistyles>["t
 
 function StatusIndicator({ status }: { status: ProviderStatus }) {
   const { theme } = useUnistyles();
+  const { t } = useI18n();
   const dotStyle = useMemo(
     () => [styles.statusDot, { backgroundColor: getDotColor(status.tone, theme) }],
     [status.tone, theme],
@@ -164,7 +178,9 @@ function StatusIndicator({ status }: { status: ProviderStatus }) {
         <>
           <Text style={styles.separator}>·</Text>
           <Text style={styles.statusLabel}>
-            {status.modelCount === 1 ? "1 model" : `${status.modelCount} models`}
+            {status.modelCount === 1
+              ? t("settings.providers.modelCount.one")
+              : t("settings.providers.modelCount.other", { count: status.modelCount })}
           </Text>
         </>
       ) : null}
@@ -178,6 +194,7 @@ export interface ProvidersSectionProps {
 
 export function ProvidersSection({ serverId }: ProvidersSectionProps) {
   const { theme } = useUnistyles();
+  const { t } = useI18n();
   const isConnected = useHostRuntimeIsConnected(serverId);
   const { entries, isLoading } = useProvidersSnapshot(serverId);
   const { patchConfig } = useDaemonConfig(serverId);
@@ -203,14 +220,14 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
         await patchConfig({ providers: { [providerId]: { enabled } } });
       } catch (error) {
         Alert.alert(
-          "Unable to update provider",
+          t("settings.providers.unableToUpdate"),
           error instanceof Error ? error.message : String(error),
         );
       } finally {
         setPendingProviderId((current) => (current === providerId ? null : current));
       }
     },
-    [patchConfig],
+    [patchConfig, t],
   );
 
   const headerActions = useMemo(
@@ -222,11 +239,11 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
             hitSlop={8}
             style={settingsStyles.sectionHeaderLink}
             accessibilityRole="button"
-            accessibilityLabel="Add provider"
+            accessibilityLabel={t("provider.add")}
             testID="add-provider-button"
           >
             <Plus size={theme.iconSize.sm} color={theme.colors.foregroundMuted} />
-            <Text style={settingsStyles.sectionHeaderLinkText}>Add provider</Text>
+            <Text style={settingsStyles.sectionHeaderLinkText}>{t("provider.add")}</Text>
           </Pressable>
         </View>
       ) : undefined,
@@ -236,25 +253,26 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
       handleOpenAddProvider,
       theme.iconSize.sm,
       theme.colors.foregroundMuted,
+      t,
     ],
   );
 
   return (
     <>
       <SettingsSection
-        title="Providers"
+        title={t("settings.host.providers")}
         trailing={headerActions}
         testID="host-page-providers-card"
         style={styles.sectionSpacing}
       >
         {!hasServer || !isConnected ? (
           <View style={EMPTY_CARD_STYLE}>
-            <Text style={styles.emptyText}>Connect to this host to see providers</Text>
+            <Text style={styles.emptyText}>{t("settings.providers.connectToSee")}</Text>
           </View>
         ) : null}
         {hasServer && isConnected && isLoading ? (
           <View style={EMPTY_CARD_STYLE}>
-            <Text style={styles.emptyText}>Loading...</Text>
+            <Text style={styles.emptyText}>{t("settings.providers.loadingState")}</Text>
           </View>
         ) : null}
         {hasServer && isConnected && !isLoading && providerDefinitions.length > 0 ? (

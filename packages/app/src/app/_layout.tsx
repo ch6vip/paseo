@@ -58,6 +58,7 @@ import { RosettaCalloutSource } from "@/desktop/updates/rosetta-callout-source";
 import { UpdateCalloutSource } from "@/desktop/updates/update-callout-source";
 import { useActiveWorktreeNewAction } from "@/hooks/use-active-worktree-new-action";
 import { useFaviconStatus } from "@/hooks/use-favicon-status";
+import { I18nProvider } from "@/i18n";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useLatchedBoolean } from "@/hooks/use-latched-boolean";
 import { useCompactWebViewportZoomLock } from "@/hooks/use-compact-web-viewport-zoom-lock";
@@ -922,11 +923,13 @@ function RuntimeProviders({ children }: { children: ReactNode }) {
   return (
     <HostRuntimeBootstrapProvider>
       <PushNotificationRouter />
-      <SidebarCalloutProvider>
-        <ToastProvider>
-          <ProvidersWrapper>{children}</ProvidersWrapper>
-        </ToastProvider>
-      </SidebarCalloutProvider>
+      <I18nProvider>
+        <SidebarCalloutProvider>
+          <ToastProvider>
+            <ProvidersWrapper>{children}</ProvidersWrapper>
+          </ToastProvider>
+        </SidebarCalloutProvider>
+      </I18nProvider>
     </HostRuntimeBootstrapProvider>
   );
 }
