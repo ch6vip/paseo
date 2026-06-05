@@ -19,11 +19,13 @@ import { useIsLocalDaemon } from "@/hooks/use-is-local-daemon";
 import { PairDeviceModal } from "@/desktop/components/pair-device-modal";
 import { buildHostAgentDetailRoute, buildSettingsHostSectionRoute } from "@/utils/host-routes";
 import { ImportSessionSheet } from "@/components/import-session-sheet";
+import { useI18n } from "@/i18n";
 import { useHostRuntimeClient } from "@/runtime/host-runtime";
 import { useOpenProject } from "@/hooks/use-open-project";
 import type { Href } from "expo-router";
 
 export function OpenProjectScreen({ serverId }: { serverId: string }) {
+  const { t } = useI18n();
   const router = useRouter();
   const openDesktopAgentList = usePanelStore((s) => s.openDesktopAgentList);
   const openProjectPicker = useOpenProjectPicker(serverId);
@@ -76,31 +78,31 @@ export function OpenProjectScreen({ serverId }: { serverId: string }) {
         <View style={styles.tiles}>
           <HomeTile
             icon={FolderOpen}
-            title="Add a project"
-            description="Open a folder on your machine"
+            title={t("openProject.addProject.title")}
+            description={t("openProject.addProject.description")}
             onPress={handleOpenPicker}
             testID="open-project-submit"
             accent
           />
           <HomeTile
             icon={Inbox}
-            title="Import session"
-            description="Bring in recent external CLI sessions"
+            title={t("openProject.importSession.title")}
+            description={t("openProject.importSession.description")}
             onPress={handleOpenImportSession}
             testID="open-project-import-session"
           />
           <HomeTile
             icon={Plug}
-            title="Setup providers"
-            description="Configure Claude Code, Codex, and more"
+            title={t("openProject.setupProviders.title")}
+            description={t("openProject.setupProviders.description")}
             onPress={handleOpenProviders}
             testID="open-project-setup-providers"
           />
           {isLocalDaemon ? (
             <HomeTile
               icon={Smartphone}
-              title="Pair device"
-              description="Connect your phone to this daemon"
+              title={t("openProject.pairDevice.title")}
+              description={t("openProject.pairDevice.description")}
               onPress={handleOpenPairDevice}
               testID="open-project-pair-device"
             />
